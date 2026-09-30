@@ -1,0 +1,37 @@
+{
+    "name": "weragen",
+    "version": "0.1.0",
+    "private": true,
+    "description": "Агентская платформа: ядро на Effect, сервер на NestJS, веб-клиент на React",
+    "workspaces": [
+        "types",
+        "ai",
+        "workflow",
+        "server",
+        "tools",
+        "web-client",
+        "examples/*"
+    ],
+    "scripts": {
+        "build": "npm run build --workspace=@weragen/types && npm run build --workspace=@weragen/ai && npm run build --workspace=@weragen/workflow",
+        "build:examples": "npm run build --workspace=@weragen-example/workflow-echo --workspace=@weragen-example/workflow-triage --workspace=@weragen-example/workflow-report --workspace=@weragen-example/workflow-faults",
+        "dev": "pm2 start ecosystem.config.cjs",
+        "stop": "pm2 delete ecosystem.config.cjs",
+        "restart": "pm2 restart ecosystem.config.cjs",
+        "ps": "pm2 list",
+        "logs:server": "pm2 logs weragen-server --lines 200",
+        "logs:web": "pm2 logs weragen-web --lines 200",
+        "db:up": "docker compose up -d",
+        "db:push": "npm run db:push --workspace=@weragen/server",
+        "generate:client": "npm run generate --workspace=@weragen/tools",
+        "typecheck": "npm run typecheck --workspaces --if-present",
+        "logs:build": "pm2 logs weragen-build --lines 200"
+    },
+    "devDependencies": {
+        "pm2": "^7.0.4",
+        "tsc-watch": "^7.2.1"
+    },
+    "engines": {
+        "node": ">=22"
+    }
+}

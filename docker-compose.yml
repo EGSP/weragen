@@ -1,0 +1,34 @@
+# Инфраструктура для разработки: база данных и приёмник трассировок.
+#
+#   docker compose up -d
+#
+services:
+    postgres:
+        image: postgres:16
+        container_name: weragen_postgres
+        restart: unless-stopped
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER:-weragen}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-weragen}
+            POSTGRES_DB: ${POSTGRES_DB:-weragen}
+        ports:
+            - '${POSTGRES_HOST_PORT:-5433}:5432'
+        volumes:
+            - weragen-pg-data:/var/lib/postgresql/data
+
+    # Приёмник трассировок, понимающий диалог: сообщения, вызовы инструментов, рассуждение.
+    # Сервер отправляет спаны по OTLP, поэтому приёмник меняется адресом, без правок в коде.
+    phoenix:
+        image: arizephoenix/phoenix:latest
+        container_name: weragen_phoenix
+        restart: unless-stopped
+        ports:
+            - '6006:6006'
+        environment:
+            - PHOENIX_WORKING_DIR=/data
+        volumes:
+            - weragen-phoenix-data:/data
+
+volumes:
+    weragen-pg-data:
+    weragen-phoenix-data:
