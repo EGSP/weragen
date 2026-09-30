@@ -6,7 +6,7 @@ import {
     type Span,
     type Tracer,
 } from '@opentelemetry/api';
-import { Context, Duration, Effect, FiberRef } from 'effect';
+import { Context, Duration, Effect } from 'effect';
 import type { Session, SpanAttributes } from '@weragen/types';
 import { api } from './api/generated/client.js';
 import { describeDefect } from './defect.js';
@@ -99,10 +99,10 @@ export type AgentOptions = {
     readonly modelId?: string;
 };
 
-export class WorkflowContext extends Context.Tag('weragen/WorkflowContext')<
+export class WorkflowContext extends Context.Service<
     WorkflowContext,
     WorkflowApi
->() {}
+>()('weragen/WorkflowContext') {}
 
 /** Как часто опрашивается состояние дочерней сессии. */
 const POLL_INTERVAL = Duration.millis(600);
@@ -112,11 +112,12 @@ const POLL_INTERVAL = Duration.millis(600);
  *
  * Вложенность шагов определяется тем, где шаг вызван, а не тем, что о ней объявлено: шаг,
  * запущенный внутри работы другого шага, становится его потомком сам. Значение переносится
- * `FiberRef`, поэтому оно наследуется и порождёнными волокнами — например, при
- * одновременном исполнении нескольких шагов.
+ * ссылкой контекста волокна, поэтому оно наследуется и порождёнными волокнами — например,
+ * при одновременном исполнении нескольких шагов.
  */
-const currentStep = FiberRef.unsafeMake<{ stepId: string; context: OtelContext } | undefined>(
-    undefined,
+const currentStep = Context.Reference<{ stepId: string; context: OtelContext } | undefined>(
+    'weragen/WorkflowCurrentStep',
+    { defaultValue: () => undefined },
 );
 
 /**
@@ -194,7 +195,7 @@ export function makeContext(sessionId: string, runContext: OtelContext): Workflo
      */
     const currentTraceparent = (): Effect.Effect<string | undefined> =>
         Effect.gen(function* () {
-            const enclosing = yield* FiberRef.get(currentStep);
+            const enclosing = yield* currentStep;
             const spanContext = trace.getSpanContext(enclosing?.context ?? runContext);
             if (spanContext === undefined) return undefined;
             const flags = (spanContext.traceFlags & 0x1).toString(16).padStart(2, '0');
@@ -211,7 +212,7 @@ export function makeContext(sessionId: string, runContext: OtelContext): Workflo
             const startedAtMs = Date.now();
             const startedAt = new Date(startedAtMs).toISOString();
 
-            const enclosing = yield* FiberRef.get(currentStep);
+            const enclosing = yield* currentStep;
             const explicit = options?.parent;
             const parent = explicit ?? enclosing?.stepId;
             const parentContext =
@@ -251,7 +252,7 @@ export function makeContext(sessionId: string, runContext: OtelContext): Workflo
             return yield* work.pipe(
                 // Работа шага исполняется с ним самим в качестве текущего: шаг, вызванный
                 // внутри неё, находит родителя без указания.
-                Effect.locally(currentStep, { stepId, context: trace.setSpan(parentContext, span) }),
+                Effect.provideService(currentStep, { stepId, context: trace.setSpan(parentContext, span) }),
                 Effect.tap((value) =>
                     Effect.gen(function* () {
                         const detail = options?.summary?.(value);

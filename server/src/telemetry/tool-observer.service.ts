@@ -32,7 +32,7 @@ export class ToolObserverService {
         sessionId: string,
         userId: string,
         parent: OtelContext,
-    ): Context.Tag.Service<ToolObserver> {
+    ): Context.Service.Shape<typeof ToolObserver> {
         const capture = this.config.tracing.captureContent;
         const logger = this.logger;
 

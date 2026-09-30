@@ -74,7 +74,7 @@ const workflow = defineWorkflow({
                     }),
                 )
                 .pipe(
-                    Effect.catchAll((failure) =>
+                    Effect.catch((failure) =>
                         Effect.succeed({ unavailable: failure.message }),
                     ),
                 );

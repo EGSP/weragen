@@ -6,16 +6,23 @@
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "exports": {
-        ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "default": "./dist/index.js" }
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
+        }
     },
     "scripts": {
         "build": "tsc",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "diagnostics": "effect-tsgo diagnostics --project tsconfig.json"
     },
     "dependencies": {
         "@weragen/types": "^0.1.0",
-        "effect": "^3.22.1",
+        "effect": "4.0.0-rc.118",
         "zod": "^4.4.3"
     },
-    "devDependencies": { "typescript": "^6.0.3" }
+    "devDependencies": {
+        "typescript": "^7.0.2"
+    }
 }
