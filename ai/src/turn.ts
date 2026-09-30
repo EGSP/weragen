@@ -339,14 +339,14 @@ function executeCall(
 
     return tool.execute(checked.value as never).pipe(
         Effect.map((value): ToolResult => ({ kind: 'ok', content: JSON.stringify(value) })),
-        Effect.catchAll((failure: ToolFailure) =>
+        Effect.catch((failure: ToolFailure) =>
             Effect.succeed(failedCall('tool_failure', failure.message, failure.hint)),
         ),
         // Текст исключения модели не отдаётся: он адресован разработчику, раскрывает
         // устройство платформы и расходует контекст, ничего не подсказывая. Модель получает
         // постоянную формулировку с предписанием, а полный текст уходит наблюдателю —
         // оттуда в спан и в журнал сервера.
-        Effect.catchAllDefect((defect) =>
+        Effect.catchDefect((defect) =>
             Effect.succeed(
                 failedCall(
                     'defect',

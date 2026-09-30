@@ -3,7 +3,7 @@ import { SpanStatusCode, trace, type Context as OtelContext } from '@opentelemet
 import { Cause, Effect, Exit, Fiber } from 'effect';
 import { api } from './api/generated/client.js';
 import { makeContext, WorkflowContext } from './context.js';
-import { describeDefect } from './defect.js';
+import { describeCauseDefect } from './defect.js';
 import { specOf, WorkflowFailure, type WorkflowDefinition } from './spec.js';
 import { contextFromTraceparent, flushTracing, initTracing, tracer } from './tracing.js';
 
@@ -47,7 +47,7 @@ export async function serve<Input, Result>(
     // и код воркфлоу от этого не меняется.
     const tracing = initTracing(spec.name, spec.version);
 
-    let running: { sessionId: string; fiber: Fiber.RuntimeFiber<unknown, unknown> } | undefined;
+    let running: { sessionId: string; fiber: Fiber.Fiber<unknown, unknown> } | undefined;
 
     let idleTimer: NodeJS.Timeout | undefined = setTimeout(() => {
         process.stderr.write('Вход не получен за отведённое время; процесс завершается.\n');
@@ -134,7 +134,7 @@ function launch<Input, Result>(
     input: unknown,
     server: Server,
     tracing: { traceparent: string | undefined; captureContent: boolean },
-): { sessionId: string; fiber: Fiber.RuntimeFiber<unknown, unknown> } {
+): { sessionId: string; fiber: Fiber.Fiber<unknown, unknown> } {
     // Спан исполнения подвешивается к контексту, полученному от платформы: без этого
     // трасса воркфлоу оказалась бы отдельным деревом, не связанным с трассой платформы.
     const parent: OtelContext = contextFromTraceparent(tracing.traceparent);
@@ -213,7 +213,7 @@ async function finish(
         return;
     }
 
-    if (Cause.isInterruptedOnly(exit.cause)) {
+    if (Cause.hasInterruptsOnly(exit.cause)) {
         await shutdown();
         return;
     }
@@ -228,10 +228,10 @@ async function finish(
  * модулей и пути в виде адресов, по которым не понять ни причины, ни места.
  */
 function failureMessage(cause: Cause.Cause<unknown>): string {
-    const failure = Cause.failureOption(cause);
+    const failure = Cause.findErrorOption(cause);
     return failure._tag === 'Some'
         ? (failure.value as WorkflowFailure).message
-        : describeDefect(cause);
+        : describeCauseDefect(cause);
 }
 
 async function report(

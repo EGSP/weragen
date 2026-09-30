@@ -1,4 +1,4 @@
-import { Cause, Chunk, Option } from 'effect';
+import { Cause } from 'effect';
 
 /**
  * Описание дефекта — необъявленного исключения в коде воркфлоу.
@@ -15,13 +15,19 @@ import { Cause, Chunk, Option } from 'effect';
 /** Сколько кадров стека показывать. Первые кадры и есть место отказа; остальное — путь до него. */
 const FRAME_LIMIT = 5;
 
-export function describeDefect(cause: Cause.Cause<unknown>): string {
-    const defect = Chunk.head(Cause.defects(cause));
-    if (Option.isNone(defect)) return Cause.pretty(cause);
+/**
+ * Описание причины неудачи, в которой ожидается дефект. Если дефекта в причине нет, она
+ * печатается как есть: другого источника сведений о ней нет.
+ */
+export function describeCauseDefect(cause: Cause.Cause<unknown>): string {
+    const die = cause.reasons.find(Cause.isDieReason);
+    return die === undefined ? Cause.pretty(cause) : describeDefect(die.defect);
+}
 
-    const value = defect.value;
-    const message = value instanceof Error ? value.message : String(value);
-    const frames = value instanceof Error ? framesOf(value.stack) : [];
+/** Описание дефекта по самому выброшенному значению. */
+export function describeDefect(defect: unknown): string {
+    const message = defect instanceof Error ? defect.message : String(defect);
+    const frames = defect instanceof Error ? framesOf(defect.stack) : [];
 
     const head =
         `Дефект в коде воркфлоу: ${message}\n` +

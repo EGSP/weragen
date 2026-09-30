@@ -19,7 +19,7 @@ import type { ModelFailure } from './errors.js';
  */
 
 /** Обращение к модели. Реализация отвечает за транспорт, авторизацию и повторы. */
-export class ModelClient extends Context.Tag('weragen/ModelClient')<
+export class ModelClient extends Context.Service<
     ModelClient,
     {
         readonly complete: (
@@ -27,28 +27,28 @@ export class ModelClient extends Context.Tag('weragen/ModelClient')<
             tools: readonly ToolSpec[],
         ) => Effect.Effect<ModelReply, ModelFailure>;
     }
->() {}
+>()('weragen/ModelClient') {}
 
 /** Реестр инструментов, доступных агенту в текущем ходе. */
-export class ToolRegistry extends Context.Tag('weragen/ToolRegistry')<
+export class ToolRegistry extends Context.Service<
     ToolRegistry,
     {
         readonly specs: readonly ToolSpec[];
         readonly find: (name: string) => AnyAgentTool | undefined;
         readonly names: readonly string[];
     }
->() {}
+>()('weragen/ToolRegistry') {}
 
 /**
  * Журнал сессии. Запись возвращает событие с проставленным порядковым номером — по нему
  * подписчики понимают, что они пропустили при обрыве связи.
  */
-export class Journal extends Context.Tag('weragen/Journal')<
+export class Journal extends Context.Service<
     Journal,
     {
         readonly append: (event: SessionEventInput) => Effect.Effect<SessionEvent>;
     }
->() {}
+>()('weragen/Journal') {}
 
 /**
  * Вызов инструмента в том виде, в каком он предъявляется наблюдателю: до того, как имя
@@ -80,7 +80,7 @@ export type ObservedToolCall = {
  * Эффект вызова отказов не имеет: любой отказ выражен полем `kind` исхода. Поэтому
  * наблюдателю остаётся учесть лишь прерывание, при котором исход не возвращается.
  */
-export class ToolObserver extends Context.Tag('weragen/ToolObserver')<
+export class ToolObserver extends Context.Service<
     ToolObserver,
     {
         readonly observe: (
@@ -88,10 +88,10 @@ export class ToolObserver extends Context.Tag('weragen/ToolObserver')<
             run: Effect.Effect<ToolResult>,
         ) => Effect.Effect<ToolResult>;
     }
->() {}
+>()('weragen/ToolObserver') {}
 
 /** Наблюдатель, ничего не делающий. Для вызывающих сторон, которым наблюдение не нужно. */
-export const noToolObserver: Context.Tag.Service<ToolObserver> = {
+export const noToolObserver: Context.Service.Shape<typeof ToolObserver> = {
     observe: (_call, run) => run,
 };
 
@@ -100,9 +100,9 @@ export const noToolObserver: Context.Tag.Service<ToolObserver> = {
  * возвращает идентификатор снимка; одинаковое содержимое получает один и тот же
  * идентификатор, поэтому ход с неизменным набором новой записи не порождает.
  */
-export class RequestSnapshots extends Context.Tag('weragen/RequestSnapshots')<
+export class RequestSnapshots extends Context.Service<
     RequestSnapshots,
     {
         readonly save: (snapshot: RequestSnapshotContent) => Effect.Effect<string>;
     }
->() {}
+>()('weragen/RequestSnapshots') {}

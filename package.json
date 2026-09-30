@@ -13,6 +13,7 @@
         "examples/*"
     ],
     "scripts": {
+        "prepare": "effect-tsgo patch --typescript --no-oxlint",
         "build": "npm run build --workspace=@weragen/types && npm run build --workspace=@weragen/ai && npm run build --workspace=@weragen/workflow",
         "build:examples": "npm run build --workspace=@weragen-example/workflow-echo --workspace=@weragen-example/workflow-triage --workspace=@weragen-example/workflow-report --workspace=@weragen-example/workflow-faults",
         "dev": "pm2 start ecosystem.config.cjs",
@@ -25,11 +26,14 @@
         "db:push": "npm run db:push --workspace=@weragen/server",
         "generate:client": "npm run generate --workspace=@weragen/tools",
         "typecheck": "npm run typecheck --workspaces --if-present",
-        "logs:build": "pm2 logs weragen-build --lines 200"
+        "logs:build": "pm2 logs weragen-build --lines 200",
+        "diagnostics": "npm run diagnostics --workspaces --if-present"
     },
     "devDependencies": {
+        "@effect/tsgo": "^0.47.1",
         "pm2": "^7.0.4",
-        "tsc-watch": "^7.2.1"
+        "tsc-watch": "^7.2.1",
+        "typescript": "^7.0.2"
     },
     "engines": {
         "node": ">=22"

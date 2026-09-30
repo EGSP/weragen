@@ -68,7 +68,7 @@ export class AgentRunnerService implements OnApplicationBootstrap {
      * Волокна ходов, исполняющихся в этом процессе. Нужны только для прерывания: признаком
      * идущего хода служит состояние `running` в записи сессии.
      */
-    private readonly fibers = new Map<string, Fiber.RuntimeFiber<unknown, unknown>>();
+    private readonly fibers = new Map<string, Fiber.Fiber<unknown, unknown>>();
 
     constructor(
         private readonly config: AppConfigService,
@@ -516,11 +516,11 @@ function classify(cause: Cause.Cause<unknown>): {
     message: string;
 } {
     // В Effect отмена волокна не является ошибкой, поэтому проверяется отдельно и раньше.
-    if (Cause.isInterruptedOnly(cause)) {
+    if (Cause.hasInterruptsOnly(cause)) {
         return { reason: 'aborted', message: 'Ход прерван пользователем.' };
     }
 
-    const error = Cause.failureOption(cause);
+    const error = Cause.findErrorOption(cause);
     if (error._tag === 'Some') {
         const failure = error.value as TurnError;
         const reason: TurnFailureReason =

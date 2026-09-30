@@ -6,11 +6,16 @@
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "exports": {
-        ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js", "default": "./dist/index.js" }
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js",
+            "default": "./dist/index.js"
+        }
     },
     "scripts": {
         "build": "tsc",
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "diagnostics": "effect-tsgo diagnostics --project tsconfig.json"
     },
     "dependencies": {
         "@opentelemetry/api": "^1.9.1",
@@ -19,11 +24,11 @@
         "@opentelemetry/sdk-trace-node": "^2.11.0",
         "@opentelemetry/semantic-conventions": "^1.43.0",
         "@weragen/types": "^0.1.0",
-        "effect": "^3.22.1",
+        "effect": "4.0.0-rc.118",
         "zod": "^4.4.3"
     },
     "devDependencies": {
         "@types/node": "^25.9.1",
-        "typescript": "^6.0.3"
+        "typescript": "^7.0.2"
     }
 }

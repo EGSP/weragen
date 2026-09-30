@@ -1,4 +1,4 @@
-import { Duration, Effect, Either } from 'effect';
+import { Duration, Effect, Result } from 'effect';
 import { z } from 'zod';
 import { defineWorkflow, serve, WorkflowContext, WorkflowFailure } from '@weragen/workflow';
 
@@ -108,13 +108,13 @@ const workflow = defineWorkflow({
                     return yield* platform.step(
                         'declared',
                         'Объявленный отказ',
-                        Effect.gen(function* () {
-                            return yield* new WorkflowFailure({
+                        Effect.fail(
+                            new WorkflowFailure({
                                 message:
                                     'Отказ объявлен воркфлоу: причина сообщена платформе, ' +
                                     'а не выведена из кода выхода процесса.',
-                            });
-                        }),
+                            }),
+                        ),
                     );
 
                 case 'defect':
@@ -191,10 +191,10 @@ const workflow = defineWorkflow({
                             // здесь помешала бы — проверяется передача отказа наверх.
                             platform.workflow('echo', { text: 'проверка', delayMs: 0, fail: true }),
                         )
-                        .pipe(Effect.either);
+                        .pipe(Effect.result);
                     return yield* new WorkflowFailure({
-                        message: Either.isLeft(outcome)
-                            ? `Дочернее исполнение отказало: ${outcome.left.message}`
+                        message: Result.isFailure(outcome)
+                            ? `Дочернее исполнение отказало: ${outcome.failure.message}`
                             : 'Дочернее исполнение завершилось без отказа, хотя отказ ему задан.',
                     });
                 }
