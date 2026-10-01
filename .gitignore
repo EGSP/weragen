@@ -148,7 +148,5 @@ dist/
 logs/
 .pm2/
 
-docs/
-
 # Рабочие каталоги агентов (git worktree)
 .worktrees/
